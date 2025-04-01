@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option csharp_namespace = "WordServer.Protos"; 
+
+service DailyWord 
+{
+  rpc GetWord(WordRequest) returns (WordReply);
+  rpc ValidateWord(WordInput) returns(IsValid);
+}
+
+message WordRequest 
+{
+	string word = 1;	
+}
+
+message WordInput
+{
+	string word = 1;
+}
+
+message WordReply 
+{
+	string word = 1;
+}
+message IsValid 
+{
+	bool isValid = 1;
+}
+

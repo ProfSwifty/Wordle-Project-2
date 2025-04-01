@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option csharp_namespace = "WordleGameServer.Protos";
+
+service DailyWordle 
+{
+	rpc Play (stream PlayRequest) returns (stream PlayReply);
+	rpc GetStats (StatsRequest) returns (StatsReply);
+}
+
+message StatsRequest {}
+
+message StatsReply 
+{
+	int32 playersCount = 1;
+	int32 winnersPercent = 2;
+	double averageGuesses = 3;
+}
+message PlayRequest
+{
+	string guess = 1;
+
+}
+message PlayReply
+{
+	string answer = 1;
+}
