@@ -7,11 +7,12 @@ public class WordService : DailyWord.DailyWordBase
 {
     private readonly List<string> _wordList;
     private readonly string _dailyWord;
+    private const string DailyWordFile = "daily_word.json";
 
     public WordService()
     {
         _wordList = LoadData();
-        _dailyWord = SelectDailyWord();
+        _dailyWord = GetOrGenerateDailyWord();
     }
 
     public override Task<WordReply> GetWord(WordRequest request, ServerCallContext context)
@@ -34,8 +35,42 @@ public class WordService : DailyWord.DailyWordBase
         return words ?? new List<string>();
     }
 
+    private string GetOrGenerateDailyWord()
+    {
+        if (File.Exists(DailyWordFile))
+        {
+            try
+            {
+                var data = JsonConvert.DeserializeObject<DailyWordData>(File.ReadAllText(DailyWordFile));
+                if (data?.Date == DateTime.UtcNow.Date.ToString("yyyy-MM-dd"))
+                {
+                    return data.Word; 
+                }
+            }
+            catch
+            {
+                
+            }
+        }
+
+        string newWord = SelectDailyWord();
+        File.WriteAllText(DailyWordFile, JsonConvert.SerializeObject(new DailyWordData
+        {
+            Word = newWord,
+            Date = DateTime.UtcNow.Date.ToString("yyyy-MM-dd")
+        }));
+
+        return newWord;
+    }
+
     private string SelectDailyWord()
     {
         return _wordList.Count > 0 ? _wordList[new Random().Next(_wordList.Count)] : "ERROR";
+    }
+
+    private class DailyWordData
+    {
+        public string Word { get; set; }
+        public string Date { get; set; }
     }
 }
