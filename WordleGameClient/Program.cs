@@ -150,6 +150,6 @@ namespace WordleClient
         public int Winners { get; set; } = 0;
         public int TotalGuesses { get; set; } = 0;
         public double AverageGuesses => Players > 0 ? (double)TotalGuesses / Players : 0;
-        public DateTime LastUpdated { get; set; } = DateTime.MinValue; // Track last updated date
+        public DateTime LastUpdated { get; set; } = DateTime.MinValue;
     }
 }
