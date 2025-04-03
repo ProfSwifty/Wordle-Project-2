@@ -31,7 +31,6 @@ namespace WordleClient
             Console.WriteLine();
             Console.WriteLine("     Available: a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z");
 
-
             using var call = client.Play(); // No arguments passed here
 
             int attempts = 0;
@@ -108,6 +107,17 @@ namespace WordleClient
         private static void UpdateStats(bool isWinner, int attempts)
         {
             var stats = LoadStats();
+            DateTime currentDate = DateTime.Today;
+
+            // Reset stats if it's a new day
+            if (stats.LastUpdated != currentDate)
+            {
+                stats.Players = 0;
+                stats.Winners = 0;
+                stats.TotalGuesses = 0;
+                stats.LastUpdated = currentDate;
+            }
+
             stats.Players++;
             if (isWinner) stats.Winners++;
             stats.TotalGuesses += attempts;
@@ -140,5 +150,6 @@ namespace WordleClient
         public int Winners { get; set; } = 0;
         public int TotalGuesses { get; set; } = 0;
         public double AverageGuesses => Players > 0 ? (double)TotalGuesses / Players : 0;
+        public DateTime LastUpdated { get; set; } = DateTime.MinValue; // Track last updated date
     }
 }

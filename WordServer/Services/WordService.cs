@@ -3,14 +3,16 @@ using Newtonsoft.Json;
 using WordServer.Protos;
 using System.IO;
 
-
 namespace WordServer.Services
 {
+
     public class WordService : DailyWord.DailyWordBase
     {
         private readonly List<string> _wordList;
         private readonly string _dailyWord;
         private const string DailyWordFile = "daily_word.json";
+
+
 
         public WordService()
         {
@@ -46,6 +48,15 @@ namespace WordServer.Services
         private string GetOrGenerateDailyWord()
         {
             Console.WriteLine($" Checking for {DailyWordFile}... Exists? {File.Exists(DailyWordFile)}");
+
+            // Ensure the directory exists where the file is supposed to be saved
+            string directory = Path.GetDirectoryName(DailyWordFile);
+            if (!Directory.Exists(directory))
+            {
+                Console.WriteLine($" Directory does not exist, creating directory: {directory}");
+                Directory.CreateDirectory(directory); // Create directory if it doesn't exist
+            }
+
             if (File.Exists(DailyWordFile))
             {
                 try

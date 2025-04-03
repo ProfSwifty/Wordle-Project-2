@@ -12,12 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.30.2" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.70.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.71.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
@@ -28,7 +23,6 @@
   <ItemGroup>
     <Protobuf Include="Protos\word.proto" />
     <Protobuf Include="Protos\wordle.proto" />
-	  <Protobuf Include="Protos\wordle.proto" GrpcServices="Server" />
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ using WordleGameServer.Protos;
 using System.Collections.Concurrent;
 using Newtonsoft.Json;
 using System.IO;
+using WordServer.Services;
 
 namespace WordleServer.Services
 {
@@ -11,30 +12,15 @@ namespace WordleServer.Services
         private readonly ILogger<WordleService> _logger;
         private static readonly ConcurrentDictionary<string, List<string>> _playerGuesses = new();
         private readonly Dictionary<string, List<string>> playerGuesses = new();
-        private const string WordFile = @"C:\Users\profs\source\repos\Wordle Project 22\WordServer\wordle.json"; // Path to the file
-
-        private List<string> _validWords;
+        private const string WordFile = "wordle.json";
 
         public WordleService(ILogger<WordleService> logger)
         {
             _logger = logger;
-            _validWords = LoadValidWords();  // Load valid words on initialization
-        }
-
-        // Method to load valid words from the wordle.json file
-        private List<string> LoadValidWords()
-        {
-            if (File.Exists(WordFile))
-            {
-                var wordData = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(WordFile));
-                return wordData ?? new List<string>();
-            }
-            return new List<string>();
         }
 
         public string GetWordOfTheDay()
         {
-            // Logic to get Word of the Day remains the same
             if (File.Exists(WordFile))
             {
                 var wordData = JsonConvert.DeserializeObject<DailyWordEntry>(File.ReadAllText(WordFile));
@@ -43,68 +29,56 @@ namespace WordleServer.Services
             return "error";
         }
 
-        public override async Task Play(
-            IAsyncStreamReader<PlayRequest> requestStream,
-            IServerStreamWriter<PlayReply> responseStream,
-            ServerCallContext context)
-        {
-            string wordOfTheDay = GetWordOfTheDay();
-            var playerId = context.Peer;
+       public override async Task Play(
+    IAsyncStreamReader<PlayRequest> requestStream,
+    IServerStreamWriter<PlayReply> responseStream,
+    ServerCallContext context)
+{
+    string wordOfTheDay = GetWordOfTheDay();
+    var playerId = context.Peer;
 
-            if (!playerGuesses.ContainsKey(playerId))
-            {
-                playerGuesses[playerId] = new List<string>();
-            }
+    if (!playerGuesses.ContainsKey(playerId))
+    {
+        playerGuesses[playerId] = new List<string>();
+    }
 
-            HashSet<char> includedLetters = new();
-            HashSet<char> excludedLetters = new();
-            HashSet<char> availableLetters = new("abcdefghijklmnopqrstuvwxyz");
+    HashSet<char> includedLetters = new();
+    HashSet<char> excludedLetters = new();
+    HashSet<char> availableLetters = new("abcdefghijklmnopqrstuvwxyz");
 
-            // Send the word of the day to the client at the start of the game
-            await responseStream.WriteAsync(new PlayReply { WordOfTheDay = wordOfTheDay });
+    // Send the word of the day to the client at the start of the game
+    await responseStream.WriteAsync(new PlayReply { WordOfTheDay = wordOfTheDay });
+            Console.WriteLine($"[DEBUG] Checking win condition: Word = {wordOfTheDay}");
 
             while (await requestStream.MoveNext())
-            {
-                string guess = requestStream.Current.Guess.Trim();
+    {
+        string guess = requestStream.Current.Guess.Trim();
 
-                // Check if the guess is a valid word and not already guessed
-                if (!IsValidWord(guess))
-                {
-                    await responseStream.WriteAsync(new PlayReply { Answer = "Invalid word. Please try again." });
-                    continue;
-                }
-
-                if (playerGuesses[playerId].Contains(guess))
-                {
-                    await responseStream.WriteAsync(new PlayReply { Answer = "You already guessed that word!" });
-                    continue;
-                }
-
-                playerGuesses[playerId].Add(guess);
-
-                string feedback = GenerateFeedback(wordOfTheDay, guess, includedLetters, excludedLetters);
-                foreach (char c in guess) availableLetters.Remove(c);
-
-                string responseMessage = $"   \n{guess}\n     {feedback}\n" +
-                                         $"     Included:  {string.Join(", ", includedLetters)}\n" +
-                                         $"     Available: {string.Join(", ", availableLetters)}\n" +
-                                         $"     Excluded:  {string.Join(", ", excludedLetters)}";
-
-                await responseStream.WriteAsync(new PlayReply { Answer = responseMessage });
-            }
-        }
-
-        private bool IsValidWord(string guess)
+        if (playerGuesses[playerId].Contains(guess))
         {
-            // Ensure the guess is a 5-letter word and exists in the valid words list
-            return guess.Length == 5 && _validWords.Contains(guess.ToUpper());
+            await responseStream.WriteAsync(new PlayReply { Answer = "You already guessed that word!" });
+            continue;
         }
+
+        playerGuesses[playerId].Add(guess);
+
+        string feedback = GenerateFeedback(wordOfTheDay, guess, includedLetters, excludedLetters);
+        foreach (char c in guess) availableLetters.Remove(c);
+
+        string responseMessage = $"   \n{guess}\n     {feedback}\n" +
+                                 $"     Included:  {string.Join(", ", includedLetters)}\n" +
+                                 $"     Available: {string.Join(", ", availableLetters)}\n" +
+                                 $"     Excluded:  {string.Join(", ", excludedLetters)}";
+
+        await responseStream.WriteAsync(new PlayReply { Answer = responseMessage });
+    }
+}
+
 
         private string GenerateFeedback(string wordOfTheDay, string guess, HashSet<char> included, HashSet<char> excluded)
         {
             char[] feedback = new char[5];
             Dictionary<char, int> matches = new();
-            Console.WriteLine($"[DEBUG] Checking win condition: Guess = {guess}, Word = {wordOfTheDay}");
 
             for (int i = 0; i < 5; i++)
             {
@@ -145,7 +119,6 @@ namespace WordleServer.Services
             return new string(feedback);
         }
     }
-
 
     public class DailyWordEntry
     {
