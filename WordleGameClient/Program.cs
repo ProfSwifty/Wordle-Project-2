@@ -66,6 +66,7 @@ namespace WordleClient
                 }
 
                 Console.WriteLine("\nGame Over! The correct word was not guessed.");
+                Console.WriteLine($"The Word was: {WordOfTheDay}");
                 UpdateStats(false, attempts);
                 DisplayStats();
             }
