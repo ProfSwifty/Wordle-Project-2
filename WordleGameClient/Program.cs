@@ -11,7 +11,7 @@ namespace WordleClient
     internal class Program
     {
         private const string StatsFile = "wordle_stats.json";
-        private const string WordOfTheDay = "SINGE"; // Hardcode or get this from the server somehow
+        private const string WordOfTheDay = "SINGE";
 
         static async Task Main(string[] args)
         {
