@@ -3,74 +3,107 @@ using Newtonsoft.Json;
 using WordServer.Protos;
 using System.IO;
 
-public class WordService : DailyWord.DailyWordBase
+
+namespace WordServer.Services
 {
-    private readonly List<string> _wordList;
-    private readonly string _dailyWord;
-    private const string DailyWordFile = "daily_word.json";
-
-    public WordService()
+    public class WordService : DailyWord.DailyWordBase
     {
-        _wordList = LoadData();
-        _dailyWord = GetOrGenerateDailyWord();
-    }
+        private readonly List<string> _wordList;
+        private readonly string _dailyWord;
+        private const string DailyWordFile = "daily_word.json";
 
-    public override Task<WordReply> GetWord(WordRequest request, ServerCallContext context)
-    {
-        return Task.FromResult(new WordReply { Word = _dailyWord });
-    }
-
-    public override Task<IsValid> ValidateWord(WordInput request, ServerCallContext context)
-    {
-        bool isWordValid = _wordList.Contains(request.Word.ToLower());
-        return Task.FromResult(new IsValid { IsValid_ = isWordValid });
-    }
-
-    private List<string> LoadData()
-    {
-        string path = "wordle.json";
-        if (!File.Exists(path)) throw new FileNotFoundException("wordle.json not found!");
-
-        var words = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(path));
-        return words ?? new List<string>();
-    }
-
-    private string GetOrGenerateDailyWord()
-    {
-        if (File.Exists(DailyWordFile))
+        public WordService()
         {
-            try
-            {
-                var data = JsonConvert.DeserializeObject<DailyWordData>(File.ReadAllText(DailyWordFile));
-                if (data?.Date == DateTime.UtcNow.Date.ToString("yyyy-MM-dd"))
-                {
-                    return data.Word; 
-                }
-            }
-            catch
-            {
-                
-            }
+            _wordList = LoadData();
+            _dailyWord = GetOrGenerateDailyWord();
         }
 
-        string newWord = SelectDailyWord();
-        File.WriteAllText(DailyWordFile, JsonConvert.SerializeObject(new DailyWordData
+        public override Task<WordReply> GetWord(WordRequest request, ServerCallContext context)
         {
-            Word = newWord,
-            Date = DateTime.UtcNow.Date.ToString("yyyy-MM-dd")
-        }));
+            return Task.FromResult(new WordReply { Word = _dailyWord });
+        }
 
-        return newWord;
-    }
+        public override Task<IsValid> ValidateWord(WordInput request, ServerCallContext context)
+        {
+            bool isWordValid = _wordList.Contains(request.Word.ToLower());
+            return Task.FromResult(new IsValid { IsValid_ = isWordValid });
+        }
 
-    private string SelectDailyWord()
-    {
-        return _wordList.Count > 0 ? _wordList[new Random().Next(_wordList.Count)] : "ERROR";
-    }
+        private List<string> LoadData()
+        {
+            string path = "wordle.json";
+            if (!File.Exists(path))
+            {
+                Console.WriteLine("wordle.json not found!");
+                throw new FileNotFoundException("wordle.json not found!");
+            }
 
-    private class DailyWordData
-    {
-        public string Word { get; set; }
-        public string Date { get; set; }
+            Console.WriteLine("Loaded wordle.json");
+            var words = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(path));
+            return words ?? new List<string>();
+        }
+
+        private string GetOrGenerateDailyWord()
+        {
+            Console.WriteLine($" Checking for {DailyWordFile}... Exists? {File.Exists(DailyWordFile)}");
+            if (File.Exists(DailyWordFile))
+            {
+                try
+                {
+                    var data = JsonConvert.DeserializeObject<DailyWordData>(File.ReadAllText(DailyWordFile));
+                    Console.WriteLine($" Found daily_word.json: {JsonConvert.SerializeObject(data)}");
+                    if (data?.Date == DateTime.UtcNow.Date.ToString("yyyy-MM-dd"))
+                    {
+                        Console.WriteLine("Using existing daily word");
+                        return data.Word;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($" Error reading daily_word.json: {ex.Message}");
+                }
+            }
+
+            string newWord = SelectDailyWord();
+            var newEntry = new DailyWordData
+            {
+                Word = newWord,
+                Date = DateTime.UtcNow.Date.ToString("yyyy-MM-dd")
+            };
+
+            var json = JsonConvert.SerializeObject(newEntry, Formatting.Indented);
+            Console.WriteLine($" Writing new daily word: {json}");
+
+            try
+            {
+                File.WriteAllText(DailyWordFile, json);
+                Console.WriteLine(" daily_word.json created successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Failed to write daily_word.json: {ex.Message}");
+            }
+
+            return newWord;
+        }
+
+        private string SelectDailyWord()
+        {
+            if (_wordList.Count == 0)
+            {
+                Console.WriteLine(" Word list is empty! Returning ERROR");
+                return "ERROR";
+            }
+
+            string selectedWord = _wordList[new Random().Next(_wordList.Count)];
+            Console.WriteLine($" Selected new word: {selectedWord}");
+            return selectedWord;
+        }
+
+        private class DailyWordData
+        {
+            public string Word { get; set; }
+            public string Date { get; set; }
+        }
     }
 }

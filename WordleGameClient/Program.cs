@@ -11,7 +11,6 @@ namespace WordleClient
     internal class Program
     {
         private const string StatsFile = "wordle_stats.json";
-        private const string WordOfTheDay = "SINGE";
 
         static async Task Main(string[] args)
         {
@@ -21,11 +20,31 @@ namespace WordleClient
             Console.WriteLine("+-------------------+");
             Console.WriteLine("|   W O R D L E D   |");
             Console.WriteLine("+-------------------+");
-            Console.WriteLine("\nYou have 6 chances to guess a 5-letter word.");
-            Console.WriteLine("\nGuess the 5-letter word:");
+            Console.WriteLine();
+            Console.WriteLine("You have 6 chances to guess a 5-letter word.");
+            Console.WriteLine("Each guess must be a 'playable' 5 letter word.");
+            Console.WriteLine("After a guess the game will display a series of");
+            Console.WriteLine("characters to show you how good your guess was.");
+            Console.WriteLine("x - means the letter above is not in the word.");
+            Console.WriteLine("? - means the letter should be in another spot.");
+            Console.WriteLine("* - means the letter is correct in this spot.");
+            Console.WriteLine();
+            Console.WriteLine("     Available: a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z");
 
-            using var call = client.Play();
+
+            using var call = client.Play(); // No arguments passed here
+
             int attempts = 0;
+
+            // Get Word of the Day from the server
+            string wordOfTheDay = "";
+
+            // Wait for the first response that contains the WordOfTheDay
+            if (await call.ResponseStream.MoveNext(default))
+            {
+                var response = call.ResponseStream.Current;
+                wordOfTheDay = response.WordOfTheDay; // Get the Word of the Day once
+            }
 
             try
             {
@@ -40,20 +59,22 @@ namespace WordleClient
                         continue;
                     }
 
+                    // Write the guess to the request stream
                     await call.RequestStream.WriteAsync(new PlayRequest { Guess = guess });
 
+                    // Read the response from the server
                     if (await call.ResponseStream.MoveNext(default))
                     {
                         var response = call.ResponseStream.Current;
                         Console.WriteLine(response.Answer);
 
-                        // Check if the guess is correct locally in the client
-                        if (guess.Equals(WordOfTheDay, StringComparison.OrdinalIgnoreCase))
+                        //Check if the guess is correct locally in the client
+                        if (guess.Equals(wordOfTheDay, StringComparison.OrdinalIgnoreCase))
                         {
-                            Console.WriteLine("\n🎉 Congratulations! You guessed the correct word! 🎉");
+                            Console.WriteLine("\nYou Win!");
                             UpdateStats(true, attempts + 1);
                             DisplayStats();
-                            return; // Exit after a win
+                            return;
                         }
                     }
                     else
@@ -66,7 +87,7 @@ namespace WordleClient
                 }
 
                 Console.WriteLine("\nGame Over! The correct word was not guessed.");
-                Console.WriteLine($"The Word was: {WordOfTheDay}");
+                Console.WriteLine($"The Word was: {wordOfTheDay}");
                 UpdateStats(false, attempts);
                 DisplayStats();
             }
@@ -82,7 +103,6 @@ namespace WordleClient
             {
                 await call.RequestStream.CompleteAsync();
             }
-
         }
 
         private static void UpdateStats(bool isWinner, int attempts)

@@ -24,4 +24,5 @@ message PlayRequest
 message PlayReply
 {
 	string answer = 1;
+	string wordOfTheDay = 2;
 }
