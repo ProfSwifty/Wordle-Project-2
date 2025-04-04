@@ -25,6 +25,7 @@ internal class Program
         int attempts = 0;
         string wordOfTheDay = "";
         HashSet<string> playerGuesses = new HashSet<string>(); // Track guesses
+        bool hasWon = false;
 
         if (await call.ResponseStream.MoveNext(default))
         {
@@ -69,12 +70,13 @@ internal class Program
                     {
                         Console.WriteLine("\nYou Win!");
                         await DisplayStats(channel);
+                        hasWon = true;
                         break;
                     }
                 }
             }
 
-            if (attempts >= 6)
+            if (attempts >= 6 && !hasWon)
             {
                 Console.WriteLine($"\nGame Over! The correct word was: {wordOfTheDay}");
                 await DisplayStats(channel);
