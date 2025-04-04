@@ -2,7 +2,10 @@
 using WordleGameServer.Protos;
 using WordServer.Protos;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
+using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.Logging;
 
 namespace WordleServer.Services
 {
@@ -12,6 +15,8 @@ namespace WordleServer.Services
         private static readonly ConcurrentDictionary<string, List<string>> _playerGuesses = new();
         private readonly Dictionary<string, List<string>> playerGuesses = new();
         private readonly DailyWord.DailyWordClient _wordClient;  // Injected gRPC client for WordServer
+
+        private const string StatsFile = "wordle_stats.json";
 
         public WordleService(ILogger<WordleService> logger, DailyWord.DailyWordClient wordClient)
         {
@@ -55,6 +60,8 @@ namespace WordleServer.Services
             await responseStream.WriteAsync(new PlayReply { WordOfTheDay = wordOfTheDay });
             Console.WriteLine($"[DEBUG] Checking win condition: Word = {wordOfTheDay}");
 
+            int attempts = 0;
+
             while (await requestStream.MoveNext())
             {
                 string guess = requestStream.Current.Guess.Trim();
@@ -76,7 +83,62 @@ namespace WordleServer.Services
                                          $"     Excluded:  {string.Join(", ", excludedLetters)}";
 
                 await responseStream.WriteAsync(new PlayReply { Answer = responseMessage });
+
+                attempts++;
+
+                if (guess.Equals(wordOfTheDay, StringComparison.OrdinalIgnoreCase))
+                {
+                    UpdateStats(true, attempts);
+                    break;
+                }
             }
+
+            if (attempts >= 6)
+            {
+                UpdateStats(false, attempts);
+            }
+        }
+
+        private void UpdateStats(bool isWinner, int attempts)
+        {
+            var stats = LoadStats();
+            DateTime currentDate = DateTime.Today;
+
+            // Reset stats if it's a new day
+            if (stats.LastUpdated != currentDate)
+            {
+                stats.Players = 0;
+                stats.Winners = 0;
+                stats.TotalGuesses = 0;
+                stats.LastUpdated = currentDate;
+            }
+
+            stats.Players++;
+            if (isWinner) stats.Winners++;
+            stats.TotalGuesses += attempts;
+            File.WriteAllText(StatsFile, JsonSerializer.Serialize(stats, new JsonSerializerOptions { WriteIndented = true }));
+        }
+
+        private WordleStats LoadStats()
+        {
+            if (File.Exists(StatsFile))
+            {
+                return JsonSerializer.Deserialize<WordleStats>(File.ReadAllText(StatsFile)) ?? new WordleStats();
+            }
+            return new WordleStats();
+        }
+
+        public override async Task<StatsReply> GetStats(StatsRequest request, ServerCallContext context)
+        {
+            var stats = LoadStats();
+            var reply = new StatsReply
+            {
+                PlayersCount = stats.Players,
+                WinnersPercent = stats.Players > 0 ? (int)((double)stats.Winners / stats.Players * 100) : 0,
+                AverageGuesses = stats.Players > 0 ? stats.AverageGuesses : 0
+            };
+
+            return await Task.FromResult(reply);
         }
 
         private string GenerateFeedback(string wordOfTheDay, string guess, HashSet<char> included, HashSet<char> excluded)
@@ -122,5 +184,14 @@ namespace WordleServer.Services
 
             return new string(feedback);
         }
+    }
+
+    public class WordleStats
+    {
+        public int Players { get; set; } = 0;
+        public int Winners { get; set; } = 0;
+        public int TotalGuesses { get; set; } = 0;
+        public double AverageGuesses => Players > 0 ? (double)TotalGuesses / Players : 0;
+        public DateTime LastUpdated { get; set; } = DateTime.MinValue;
     }
 }
