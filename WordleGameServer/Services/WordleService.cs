@@ -9,6 +9,14 @@ using Microsoft.Extensions.Logging;
 
 namespace WordleServer.Services
 {
+
+    /*
+ * Name: Logan McCallum Student Number: 1152955 Section: 2
+ * Name: Spencer Martin Student Number: 1040415 Section: 2
+ * Name: Ashley Burley-Denis Student Number: 0908968 Section: 1
+ */
+
+    //WordleService class, inherits DailyWordl.DailyWordleBase,
     public class WordleService : DailyWordle.DailyWordleBase
     {
         private readonly ILogger<WordleService> _logger;
@@ -18,12 +26,15 @@ namespace WordleServer.Services
 
         private const string StatsFile = "wordle_stats.json";
 
+        //WordleService Constructor
         public WordleService(ILogger<WordleService> logger, DailyWord.DailyWordClient wordClient)
         {
             _logger = logger;
             _wordClient = wordClient;  // Store the injected WordClient
         }
 
+
+        //GetWordOfTheDay method, gets the current word of the day.
         public async Task<string> GetWordOfTheDay()
         {
             try
@@ -39,6 +50,9 @@ namespace WordleServer.Services
             }
         }
 
+
+        //Play override async method, initializes the game to be played on the client, 
+        //response accordingly based on the inputted guesses.
         public override async Task Play(
             IAsyncStreamReader<PlayRequest> requestStream,
             IServerStreamWriter<PlayReply> responseStream,
@@ -99,6 +113,8 @@ namespace WordleServer.Services
             }
         }
 
+        //UpdateStats method, updates the stats after an
+        //attempt of the game, resets the stats if it is a new day.
         private void UpdateStats(bool isWinner, int attempts)
         {
             var stats = LoadStats();
@@ -119,6 +135,7 @@ namespace WordleServer.Services
             File.WriteAllText(StatsFile, JsonSerializer.Serialize(stats, new JsonSerializerOptions { WriteIndented = true }));
         }
 
+        //LoadStats method, loads the stats in for the current days, wordle
         private WordleStats LoadStats()
         {
             if (File.Exists(StatsFile))
@@ -128,6 +145,8 @@ namespace WordleServer.Services
             return new WordleStats();
         }
 
+
+        //GetStats override method,  returns the current stats of the day.
         public override async Task<StatsReply> GetStats(StatsRequest request, ServerCallContext context)
         {
             var stats = LoadStats();
@@ -141,6 +160,8 @@ namespace WordleServer.Services
             return await Task.FromResult(reply);
         }
 
+        //GenerateFeedback method, returns a string of what
+        //was correctly guessed based on the inputted guess.
         private string GenerateFeedback(string wordOfTheDay, string guess, HashSet<char> included, HashSet<char> excluded)
         {
             char[] feedback = new char[5];
@@ -186,6 +207,7 @@ namespace WordleServer.Services
         }
     }
 
+    //WordleStats class, holds the stats for the current day.
     public class WordleStats
     {
         public int Players { get; set; } = 0;

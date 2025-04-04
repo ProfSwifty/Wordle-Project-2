@@ -7,6 +7,13 @@ using Google.Protobuf;
 
 namespace WordleClient
 {
+    /*
+ * Name: Logan McCallum Student Number: 1152955 Section: 2
+ * Name: Spencer Martin Student Number: 1040415 Section: 2
+ * Name: Ashley Burley-Denis Student Number: 0908968 Section: 1
+ */
+
+    //Program class, main output.
     internal class Program
     {
         static async Task Main(string[] args)
@@ -43,7 +50,7 @@ namespace WordleClient
                 while (attempts < 6)
                 {
                     Console.Write("\nEnter your guess: ");
-                    string? guess = Console.ReadLine()?.Trim();
+                    string? guess = Console.ReadLine()?.Trim().ToLower();
 
                     if (string.IsNullOrWhiteSpace(guess) || guess.Length != 5)
                     {
@@ -72,11 +79,9 @@ namespace WordleClient
 
                 }
 
-
                 if (attempts >= 6)
                 {
-                    Console.WriteLine("\nGame Over! The correct word was ", wordOfTheDay);
-                    await Task.Delay(1000);
+                    Console.WriteLine($"\nGame Over! The correct word was: {wordOfTheDay}");
                     await DisplayStats(channel);
                 }
             }
@@ -90,6 +95,7 @@ namespace WordleClient
             }
         }
 
+        //DisplayStats Method, displays the stats for the current wordle.
         private static async Task DisplayStats(GrpcChannel channel)
         {
             var client = new DailyWordle.DailyWordleClient(channel);
