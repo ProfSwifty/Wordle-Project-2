@@ -18,6 +18,14 @@ namespace WordleClient
             Console.WriteLine("|   W O R D L E D   |");
             Console.WriteLine("+-------------------+");
             Console.WriteLine();
+            Console.WriteLine("You have 6 chances to guess a 5-letter word.");
+            Console.WriteLine("Each guess must be a 'playable' 5 letter word.");
+            Console.WriteLine("After a guess the game will display a series of\ncharacters to show you how good your guess was.");
+            Console.WriteLine("x - means the letter above is not in the word.");
+            Console.WriteLine("? - means the letter should be in another spot.");
+            Console.WriteLine("* - means the letter is correct in this spot.");
+            Console.WriteLine("\tAvailable: a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z");
+
 
             using var call = client.Play();
 
@@ -42,6 +50,10 @@ namespace WordleClient
                         Console.WriteLine("Please enter a valid 5-letter word.");
                         continue;
                     }
+                    else
+                    {
+                        attempts++;
+                    }
 
                     await call.RequestStream.WriteAsync(new PlayRequest { Guess = guess });
 
@@ -58,7 +70,6 @@ namespace WordleClient
                         }
                     }
 
-                    attempts++;
                 }
 
 

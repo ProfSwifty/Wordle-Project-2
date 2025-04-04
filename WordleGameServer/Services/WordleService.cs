@@ -77,7 +77,7 @@ namespace WordleServer.Services
                 string feedback = GenerateFeedback(wordOfTheDay, guess, includedLetters, excludedLetters);
                 foreach (char c in guess) availableLetters.Remove(c);
 
-                string responseMessage = $"   \n{guess}\n     {feedback}\n" +
+                string responseMessage = $"   \n({attempts + 1}) {guess}\n     {feedback}\n" +
                                          $"     Included:  {string.Join(", ", includedLetters)}\n" +
                                          $"     Available: {string.Join(", ", availableLetters)}\n" +
                                          $"     Excluded:  {string.Join(", ", excludedLetters)}";

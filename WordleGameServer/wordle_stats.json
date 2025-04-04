@@ -1,7 +1,7 @@
 {
-  "Players": 5,
-  "Winners": 5,
-  "TotalGuesses": 6,
-  "AverageGuesses": 1.2,
+  "Players": 15,
+  "Winners": 15,
+  "TotalGuesses": 23,
+  "AverageGuesses": 1.5333333333333334,
   "LastUpdated": "2025-04-03T00:00:00-04:00"
 }
