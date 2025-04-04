@@ -72,36 +72,38 @@ namespace WordleServer.Services
 
             // Send the word of the day to the client at the start of the game
             await responseStream.WriteAsync(new PlayReply { WordOfTheDay = wordOfTheDay });
-            Console.WriteLine($"[DEBUG] Checking win condition: Word = {wordOfTheDay}");
+            Console.WriteLine($"Whats the Word: = {wordOfTheDay}");
+
 
             int attempts = 0;
 
             while (await requestStream.MoveNext())
             {
                 string guess = requestStream.Current.Guess.Trim();
+                var validationReply = await _wordClient.ValidateWordAsync(new WordInput { Word = guess });
 
                 if (playerGuesses[playerId].Contains(guess))
                 {
                     await responseStream.WriteAsync(new PlayReply { Answer = "You already guessed that word!" });
                     continue;
                 }
-
-                var validationReply = await _wordClient.ValidateWordAsync(new WordInput { Word = guess });
-
-                if (!validationReply.IsValid_)
+                else if (!validationReply.IsValid_)
                 {
                     await responseStream.WriteAsync(new PlayReply { Answer = "Invalid word. Try a valid 5-letter word." });
                     continue;
                 }
+                else
+                {
+                    attempts++;
+                }
 
                 playerGuesses[playerId].Add(guess);
 
-                attempts++;
 
                 string feedback = GenerateFeedback(wordOfTheDay, guess, includedLetters, excludedLetters);
                 foreach (char c in guess) availableLetters.Remove(c);
 
-                string responseMessage = $"   \n({attempts + 1}) {guess}\n     {feedback}\n" +
+                string responseMessage = $"   \n({attempts}) {guess}\n     {feedback}\n" +
                                          $"     Included:  {string.Join(", ", includedLetters)}\n" +
                                          $"     Available: {string.Join(", ", availableLetters)}\n" +
                                          $"     Excluded:  {string.Join(", ", excludedLetters)}";
