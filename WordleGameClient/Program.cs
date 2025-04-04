@@ -3,7 +3,6 @@ using Grpc.Net.Client;
 using WordleGameServer.Protos;
 using System;
 using System.Threading.Tasks;
-using Google.Protobuf;
 
 namespace WordleClient
 {

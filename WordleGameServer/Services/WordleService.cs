@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace WordleServer.Services
 {
 
-    /*
+/*
  * Name: Logan McCallum Student Number: 1152955 Section: 2
  * Name: Spencer Martin Student Number: 1040415 Section: 2
  * Name: Ashley Burley-Denis Student Number: 0908968 Section: 1
@@ -22,7 +22,7 @@ namespace WordleServer.Services
         private readonly ILogger<WordleService> _logger;
         private static readonly ConcurrentDictionary<string, List<string>> _playerGuesses = new();
         private readonly Dictionary<string, List<string>> playerGuesses = new();
-        private readonly DailyWord.DailyWordClient _wordClient;  // Injected gRPC client for WordServer
+        private readonly DailyWord.DailyWordClient _wordClient;
 
         private const string StatsFile = "wordle_stats.json";
 
@@ -30,7 +30,7 @@ namespace WordleServer.Services
         public WordleService(ILogger<WordleService> logger, DailyWord.DailyWordClient wordClient)
         {
             _logger = logger;
-            _wordClient = wordClient;  // Store the injected WordClient
+            _wordClient = wordClient;  //Store the injected WordClient
         }
 
 
@@ -86,7 +86,17 @@ namespace WordleServer.Services
                     continue;
                 }
 
+                var validationReply = await _wordClient.ValidateWordAsync(new WordInput { Word = guess });
+
+                if (!validationReply.IsValid_)
+                {
+                    await responseStream.WriteAsync(new PlayReply { Answer = "Invalid word. Try a valid 5-letter word." });
+                    continue;
+                }
+
                 playerGuesses[playerId].Add(guess);
+
+                attempts++;
 
                 string feedback = GenerateFeedback(wordOfTheDay, guess, includedLetters, excludedLetters);
                 foreach (char c in guess) availableLetters.Remove(c);
@@ -97,8 +107,6 @@ namespace WordleServer.Services
                                          $"     Excluded:  {string.Join(", ", excludedLetters)}";
 
                 await responseStream.WriteAsync(new PlayReply { Answer = responseMessage });
-
-                attempts++;
 
                 if (guess.Equals(wordOfTheDay, StringComparison.OrdinalIgnoreCase))
                 {

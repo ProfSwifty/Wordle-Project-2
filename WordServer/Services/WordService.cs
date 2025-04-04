@@ -131,18 +131,5 @@ namespace WordServer.Services
             public string Word { get; set; }
             public string Date { get; set; }
         }
-
-        public string SelectRandomWord()
-        {
-            if (_wordList.Count == 0)
-            {
-                Console.WriteLine("Word list is empty! Returning error.");
-                return "ERROR";
-            }
-
-            string selectedWord = _wordList[new Random().Next(_wordList.Count)];
-            Console.WriteLine($"Selected word: {selectedWord}");
-            return selectedWord;
-        }
     }
 }
