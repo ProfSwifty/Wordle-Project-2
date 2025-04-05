@@ -30,7 +30,7 @@ namespace WordleServer.Services
         public WordleService(ILogger<WordleService> logger, DailyWord.DailyWordClient wordClient)
         {
             _logger = logger;
-            _wordClient = wordClient;  //Store the injected WordClient
+            _wordClient = wordClient;
         }
 
 
