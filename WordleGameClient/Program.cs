@@ -69,6 +69,7 @@ internal class Program
                     if (guess.Equals(wordOfTheDay, StringComparison.OrdinalIgnoreCase))
                     {
                         Console.WriteLine("\nYou Win!");
+                        await Task.Delay(1000);
                         await DisplayStats(channel);
                         hasWon = true;
                         break;
