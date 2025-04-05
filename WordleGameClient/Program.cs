@@ -8,6 +8,8 @@ internal class Program
         var channel = GrpcChannel.ForAddress("https://localhost:7070");
         var client = new DailyWordle.DailyWordleClient(channel);
 
+
+        //Welcome Screen
         Console.WriteLine("+-------------------+");
         Console.WriteLine("|   W O R D L E D   |");
         Console.WriteLine("+-------------------+");
@@ -24,7 +26,7 @@ internal class Program
 
         int attempts = 0;
         string wordOfTheDay = "";
-        HashSet<string> playerGuesses = new HashSet<string>(); // Track guesses
+        HashSet<string> playerGuesses = new HashSet<string>();
         bool hasWon = false;
 
         if (await call.ResponseStream.MoveNext(default))
@@ -93,6 +95,7 @@ internal class Program
         }
     }
 
+    //Displays the stats for the user
     private static async Task DisplayStats(GrpcChannel channel)
     {
         var client = new DailyWordle.DailyWordleClient(channel);

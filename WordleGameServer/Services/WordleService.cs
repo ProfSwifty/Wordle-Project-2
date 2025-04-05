@@ -62,9 +62,8 @@ namespace WordleServer.Services
             var playerId = context.Peer;
 
             if (!playerGuesses.ContainsKey(playerId))
-            {
                 playerGuesses[playerId] = new List<string>();
-            }
+            
 
             HashSet<char> includedLetters = new();
             HashSet<char> excludedLetters = new();
@@ -130,7 +129,7 @@ namespace WordleServer.Services
             var stats = LoadStats();
             DateTime currentDate = DateTime.Today;
 
-            // Reset stats if it's a new day
+            //If new day, reset
             if (stats.LastUpdated != currentDate)
             {
                 stats.Players = 0;
