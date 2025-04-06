@@ -72,11 +72,9 @@ namespace WordleClient
 
                 }
 
-
                 if (attempts >= 6)
                 {
-                    Console.WriteLine("\nGame Over! The correct word was ", wordOfTheDay);
-                    await Task.Delay(1000);
+                    Console.WriteLine($"\nGame Over! The correct word was: {wordOfTheDay}");
                     await DisplayStats(channel);
                 }
             }
